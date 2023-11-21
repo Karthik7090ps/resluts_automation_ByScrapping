@@ -1,5 +1,4 @@
 
-```markdown
 # Automated Student Result Analysis Tool
 
 This tool automates the process of extracting and analyzing student results from a web portal. It is designed to work with specific university results web pages and generate radar charts for individual students based on their academic performance.
