@@ -35,24 +35,29 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from tkinter import simpledialog 
 from tkinter import messagebox
-import tkinter as tk
 import subprocess
-from PIL import Image
 from fpdf import FPDF
+
 dateutil.__version__ = "2.8.1"
 
+start_time = time.time()
 
+# enable the below function to make the json file editable in the interface
+enable_JSON_PANEL= 0
 
+if enable_JSON_PANEL==0:
+    path = 'n'
+else:
+    path = simpledialog.askstring("Input","Edit JSON File? Y/N (Default No): ")
 
-#path = 'n'
-path = simpledialog.askstring("Input","Edit JSON File? Y/N (Default No): ")
 if path is None or path =="":
     path = 'n'
+
 if path.lower() == 'y':
-    file_path = "/home/picchai/result_automation_system/config.json"
+    file_path = "/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/config.json"
     subprocess.call(["nano", file_path])
 
-with open("/home/picchai/result_automation_system/config.json", "r") as config_file:
+with open("/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/config.json", "r") as config_file:
     config = json.load(config_file)
 
 dev = config["developer_mode"]
@@ -60,8 +65,8 @@ print_v=config["print_debug_data"]
 led=config["screen_show"]
 
 if dev==0:
-    messagebox.showinfo("WELCOME", "Automated student Result Analysis Tool")
-    messagebox.showinfo("THANKYOU", "Developed by Karthik P S, Dept. of EC, BMSCE")
+    messagebox.showinfo("WELCOME", "Automated student Result___Analysis Tool")
+    messagebox.showinfo("THANKYOU", "Developed by Karthik P S, __Dept. of EC, BMSCE__")
 
 if led==0:
     chrome_options = webdriver.ChromeOptions()
@@ -82,7 +87,7 @@ def read_text():
     thr = cv2.GaussianBlur(thr, (3, 3), 0) 
     kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
     thr = cv2.filter2D(thr, -2, kernel)
-    custom_config = r'--oem 3'# --psm 8 -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrsuvwxyz'
+    custom_config = r'--oem 3 --psm 6'# -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrsuvwxyz'
     captcha = pytesseract.image_to_string(thr, config=custom_config)
     # cv2.imshow('Original Image',thr)
     # cv2.waitKey(0)
@@ -95,7 +100,8 @@ def get_captcha():
     element = driver.find_element(By.ID, "captcha_image")
     location = element.location
     size = element.size
-    driver.save_screenshot("temp.png")
+    temp=config["temp_png_location"]
+    driver.save_screenshot(temp)
     if print_v==1:
         print("screenshot taken")
     x = location['x']
@@ -105,7 +111,7 @@ def get_captcha():
     width = x + w-10
     height = y + h
 
-    im = Image.open('temp.png')
+    im = Image.open(temp)
     im = im.crop((int(x), int(y), int(width), int(height)))
     im.save(captcha_fn)
     if print_v==1:
@@ -203,7 +209,7 @@ def main():
 
         # driver.get("https://www.google.com/")
         # driver.implicitly_wait(0.5)
-
+        
         # INITIALIZE PARAMETERS
         if dev==1:
             path='a'
@@ -228,9 +234,9 @@ def main():
             #     status = 'y'
             status = 'y'
 
-            # if status.lower() == 'n':
-            #     user_input = simpledialog.askstring("Input","Enter the maximum attempts (DEFAULT: 6):")
-            #     max_attempts = int(user_input) if user_input else 6
+            if status.lower() == 'n':
+                user_input = simpledialog.askstring("Input","Enter the maximum attempts (DEFAULT: 6):")
+                max_attempts = int(user_input) if user_input else 6
 
             user_input = simpledialog.askstring("Input","Enter the branch number (DEFAULT: 1bm22ec): ")
             usn_num = user_input if user_input else "1bm22ec"
@@ -240,10 +246,12 @@ def main():
             usn_num = config["usn_num"]
             status = config["status"]
 
+
         data = []
         heading = 0
         credits=0
         radar_chart_list = []
+        write_path=config["write_radarpath"]
 
         driver.get(config["result_link"])
         driver.implicitly_wait(0.5)
@@ -267,6 +275,7 @@ def main():
 
             # WHILE CAPTCHA IS WRONG TRY AGAIN BY REFRESHING SITE
             while not captcha_solved:
+                break_loop = False
                 # if status.lower() == 'n' :
                 #     if max_attempts - captcha_attempts == 0:
                 #         break
@@ -282,9 +291,17 @@ def main():
                 time.sleep(2)
 
                 # check if result page is opened
+                elements = driver.find_elements(By.XPATH,  '//*[@id="res"]/h4[@class="text-center text-danger"]')
+                for element in elements:
+                    if "Invalid USN" in element.text:
+                        break_loop = True
+
+                if break_loop:
+                    break
+
                 if "Student Name" in driver.page_source:
                     captcha_solved = True
-                    
+                
                 else:
                     # Captcha is incorrect, clear input fields and try again
                     driver.find_element(By.XPATH, '//*[@id="captcha"]').clear()
@@ -294,12 +311,12 @@ def main():
 
             # IF CAPTCHA IS CORRECTLY ENTERED
             if captcha_solved:
-                print("captcha is solved successfully")
+                print("captcha solved successfully")
 
 
                 ###################### EXTRACT THE DATA FROM WEB
                 table = driver.find_element(By.XPATH, '//*[@id="printTable"]')
-                student_name_element = driver.find_element(By.XPATH, '//*[@id="printTable"]//tr[th[contains(text(), "Student Name")]]/th')
+                student_name_element = driver.find_element(By.XPATH, '//*[@id="printTable"]/thead/tr[2]/th[2]')
                 usn_element = driver.find_element(By.XPATH, '//*[@id="printTable"]//tr[th[contains(text(), "USN")]]/th')
 
                 # Extract the text from the elements
@@ -319,7 +336,7 @@ def main():
                     cols = row.find_elements(By.TAG_NAME, 'td')
                     cols_data = [col.text.strip() for col in cols]
                     data.append(cols_data)
-
+                print(data)
                 ######################### DO NOT EDIT ABOVE LINES ####################
 
                 # FUNCTION CALL TO CALCULATE SGPA AND CREDITS
@@ -330,7 +347,12 @@ def main():
                 if heading == 0:
                     sub = []
                     sub = shorten_name(data)
-                    header = ["USN", "Student Name"] + sub + [ "CREDIT_POINTS","SGPA", "    CHART    "]
+
+                    if write_path==1:
+                        header = ["USN", "Student Name"] + sub + [ "CREDIT_POINTS","SGPA", "    CHART    "]
+                    else:
+                        header = ["USN", "Student Name"] + sub + [ "CREDIT_POINTS","SGPA"]
+
                     csv_writer.writerow(header)
                     heading = 1
 
@@ -361,30 +383,32 @@ def main():
 
 
 
-                write_path=config["write_radarpath"]
+                
                 if write_path==1:
                     usn_data.append(radar_chart_hyperlink)
                     usn_data[-1] = radar_chart_hyperlink
                 csv_writer.writerow(usn_data)
 
                 print("data saved successfully, heading on to next usn")
-                driver.refresh()
+                # driver.refresh()
                 firstnum = firstnum+1
             else:
-                driver.refresh()
+                # driver.refresh()
                 firstnum = firstnum+1  # increment in enrollment number
                 print("enrollment number is not found")
 
-            if firstnum==lastusn:
+            if firstnum-1 ==lastusn:
                 print("SUCCESSFULLY FETCHED ALL RESULTS")
                 break
     
         convert_radar_charts_to_pdf(radar_chart_list)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"PDF Generated Successfully with time: {execution_time:.4f} seconds")
+
   
 
-
-
-
+# FUNCTION TO CALCULATE SGPA AND AUTOMATE TO TAKE THE VALUES OF CREDITS  
 def calculate_sgpa(data, grade_points, subject_credits):
     red=0
     total_credits = 0
@@ -427,6 +451,7 @@ def calculate_sgpa(data, grade_points, subject_credits):
 
     return sgpa, total_credit_points
 
+# FUNCTION TO SHORTEN SUBJECT NAMES AND GIVE THE SHORT SUBJECT NAMES
 def shorten_name(data):
     subject_names = []
     for row in data:
@@ -438,10 +463,10 @@ def shorten_name(data):
             # If there is only one word, take the first 3 letters
             if len(words) == 1:
                 shortw = words[0][:3]
-
+                shortw = shortw.upper()
             elif len(words) == 2:
                 shortw = words[0][0] + words[1][0] + words[1][-1]
-
+                shortw = shortw.upper()
             else:
                 # Take the first letter of each word and join them
                 shortw = ''.join(word[0] for word in words)
@@ -456,18 +481,23 @@ def convert_radar_charts_to_pdf(radar_chart_list):
     # Define custom page dimensions in pixels (640x480)
     page_width = 640  # 640 pixels
     page_height = 480  # 480 pixels
+    write_path=config["write_radarpath"]
 
     # Create a custom-sized PDF with portrait orientation
     pdf = FPDF(orientation='P', unit='pt', format=(page_width, page_height))
 
+    watermark_image_path = config["watermark_image"]
+
     for radar_chart_filename in radar_chart_list:
         pdf.add_page()  # Add a new page for each image
         pdf.image(radar_chart_filename, x=0, y=0, w=page_width, h=page_height, type='PNG', link=radar_chart_filename)  # Specify type and link to maintain image quality
+        pdf.image(watermark_image_path, x=page_width - 50, y=page_height - 50, w=40, h=30, type='PNG')
+        if write_path == 0:
+            os.remove(radar_chart_filename)
 
     # Specify the PDF output path
     pdf_output_path = config["pdf_path"]
     pdf.output(pdf_output_path)
-
 
 
 # main function

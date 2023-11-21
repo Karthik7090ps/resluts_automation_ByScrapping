@@ -1,13 +1,11 @@
-{
-    "print_debug_data": 0,
-    "screen_show": 1,
-    "auto": 0,
+{   
+    "developer_mode":0, "print_debug_data": 0,  "screen_show": 1,   "auto": 0,
     "firstnum": 400,
     "lastusn": 423,
     "usn_num": "1bm22ec",
     "status": "y",
     "write_radarpath": 0,
-    "developer_mode":0,
+    "temp_png_location": "/home/picchai/result_automation_system/temp.png",
     "result_link": "https://results.bmsce.in/home/result/875/3rd-Semester-Electronics-and-Communication-Engineering-Provisional-see-Results",
     "result_lin": "https://results.bmsce.in/home/result/901/1st-Semester-Electronics-and-Communication-Engineering-Provisional-SEE-Results",
     "captcha_image": "/home/picchai/result_automation_system/result/captcha.png",
@@ -15,6 +13,7 @@
     "pdf_intake": "/home/picchai/result_automation_system/result/",
     "csv_path": "/home/picchai/result_automation_system/result/EC_3rd_sem_result.csv",
     "pdf_path" : "/home/picchai/result_automation_system/result/metadata.pdf",
+    "watermark_image": "/home/picchai/result_automation_system/watermark.png",
     "grade_points": {
         "O": 10,
         "A+": 9,
