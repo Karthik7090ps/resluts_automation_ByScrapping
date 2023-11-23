@@ -38,6 +38,7 @@ from tkinter import messagebox
 import tkinter as tk
 import subprocess
 from fpdf import FPDF
+import PdfConverter
 
 dateutil.__version__ = "2.8.1"
 
@@ -417,6 +418,7 @@ def main():
         end_time = time.time()
         execution_time = end_time - start_time
         print(f"PDF Generated Successfully with time: {execution_time:.4f} seconds")
+        PdfConverter.play_sound()
 
     root.mainloop()
 
@@ -508,8 +510,9 @@ def convert_radar_charts_to_pdf(radar_chart_list):
         if write_path == 0:
             os.remove(radar_chart_filename)
 
+    timestamp = int(time.time()) 
     # Specify the PDF output path
-    pdf_output_path = config["pdf_path"]
+    pdf_output_path = f"{config['pdf_path']}_output_{timestamp}.pdf"
     pdf.output(pdf_output_path)
 
 
