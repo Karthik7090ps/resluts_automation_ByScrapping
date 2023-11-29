@@ -38,7 +38,7 @@ from tkinter import messagebox
 import tkinter as tk
 import subprocess
 from fpdf import FPDF
-import PdfConverter
+import pygame
 
 dateutil.__version__ = "2.8.1"
 
@@ -134,6 +134,8 @@ def create_radar_chart(usn, grades, sub,student_name):
         'F': 0
     }
 
+    # print(sub)
+    # print(grades)
     # Filter out subjects with grades '-' and 'PP'
     filtered_grades = []
     filtered_sub = []
@@ -192,12 +194,15 @@ def create_radar_chart(usn, grades, sub,student_name):
 
     return radar_chart_filename
 
+timestamp = int(time.time()) 
 #MAIN FUNCTION OF THE CODE TO GET RESULTS
 def main():
 
     root=tk.Tk()
+    
     #SPECIFY THE PATH OF CSV FILE
-    filename = config["csv_path"] #'/home/picchai/result_automation_system/result/EC_3rd_sem_result.csv'
+    # filename = config["csv_path"] #'/home/picchai/result_automation_system/result/EC_3rd_sem_result.csv'
+    filename = f"{config['csv_pat']}_output_{timestamp}.CSV"
 
     # EDIT AS PER GRADE POINTS (VTU BASED)
     grade_points = config["grade_points"] 
@@ -357,6 +362,7 @@ def main():
                 sgpa = round(sgpa, 2)  # Round to 2 decimal places
                 sub = []
                 data = data[1:]
+                sub = shorten_name(data)
                 if heading == 0:
                     sub = []
                     sub = shorten_name(data)
@@ -387,19 +393,20 @@ def main():
                 usn_data[-2] = credits 
 
 ####################################################################################################################
-                sub = shorten_name(data)
+                # sub = shorten_name(data)
                 radar_chart_filename = create_radar_chart(usn, [row[5] for row in data if len(row) >= 6],sub,student_name)
                 radar_chart_hyperlink = f'<a href="{radar_chart_filename}">{radar_chart_filename}</a>'
 
 
                 radar_chart_list.append(radar_chart_filename)
                 
-
+                # print(radar_chart_list)
 
                 
                 if write_path==1:
                     usn_data.append(radar_chart_hyperlink)
                     usn_data[-1] = radar_chart_hyperlink
+                # print(usn_data)
                 csv_writer.writerow(usn_data)
 
                 print("data saved successfully, heading on to next usn")
@@ -416,12 +423,19 @@ def main():
     
         convert_radar_charts_to_pdf(radar_chart_list)
         end_time = time.time()
-        execution_time = end_time - start_time
-        print(f"PDF Generated Successfully with time: {execution_time:.4f} seconds")
-        PdfConverter.play_sound()
+        execution_time = (end_time - start_time)/60
+        print(f"PDF Generated Successfully with time: {execution_time:.4f} minutes")
+        play_sound()
 
     root.mainloop()
 
+
+def play_sound():
+    pygame.init()
+    pygame.mixer.music.load('/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/complete.wav')
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
   
 # FUNCTION TO CALCULATE SGPA AND AUTOMATE TO TAKE THE VALUES OF CREDITS  
 def calculate_sgpa(data, grade_points, subject_credits):
@@ -486,9 +500,9 @@ def shorten_name(data):
                 shortw = ''.join(word[0] for word in words)
                 shortw = shortw.upper()
             subject_names.append(shortw)
-    if print_v==1:
-        print(subject_names)
-    print(subject_names)
+    # if print_v==1:
+    #     print(subject_names)
+    # print(subject_names)
     return subject_names
 
 # Function to convert a list of PNG images to a PDF
@@ -510,7 +524,7 @@ def convert_radar_charts_to_pdf(radar_chart_list):
         if write_path == 0:
             os.remove(radar_chart_filename)
 
-    timestamp = int(time.time()) 
+    
     # Specify the PDF output path
     pdf_output_path = f"{config['pdf_path']}_output_{timestamp}.pdf"
     pdf.output(pdf_output_path)
