@@ -1,12 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
 import os
 from fpdf import FPDF
+import PdfConverter
 
 # Replace this with your file path
-file_path = '/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/STORE/Results_meta.csv'
+file_path = '/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/STORE/2nd sem/Results_meta.csv'
 
 # Read the CSV file
 data = pd.read_csv(file_path)
@@ -23,7 +23,7 @@ grade_points_order = {"O": 10, "A+": 9, "A": 8, "B+": 7, "B": 6, "C": 5, "P": 4,
 # Initialize a dictionary to store grade counts and top students for each subject
 grade_counts = {subject: {} for subject in subjects}
 top_students = {subject: None for subject in subjects}
-
+chart_paths = []
 # Iterate through rows and count grades for each subject
 for _, row in data.iterrows():
     for subject in subjects:
@@ -43,13 +43,41 @@ for _, row in data.iterrows():
             top_students[subject] = (row['USN'], marks_and_grade[0], grade) if len(marks_and_grade) == 2 else (
                 row['USN'], 'NA', grade)
 
-# Create a directory to save charts if it doesn't exist
-charts_directory = '/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/charts/'
-if not os.path.exists(charts_directory):
-    os.makedirs(charts_directory)
+# Calculate the number of failures for each subject
+failures = {}
+for subject, counts in grade_counts.items():
+    failures[subject] = counts.get('F', 0)
+
+# Sort subjects by the number of failures
+sorted_failures = {k: v for k, v in sorted(failures.items(), key=lambda item: item[1], reverse=True)}
+
+# Bar chart for the highest number of failures across subjects
+plt.figure(figsize=(8, 6))
+color_values = np.linspace(0, 1, len(sorted_failures))
+bars = plt.bar(sorted_failures.keys(), sorted_failures.values(), color=plt.cm.plasma(color_values))
+plt.xlabel('Subjects')
+plt.ylabel('Number of Failures')
+plt.title('Highest Number of Failures across Subjects')
+
+# Displaying counts on top of bars and total number of students
+for bar, count in zip(bars, sorted_failures.values()):
+    plt.text(bar.get_x() + bar.get_width() / 2, count, str(count),
+             ha='center', va='bottom', fontsize=9)
+
+plt.text(0.5, max(sorted_failures.values()) + 5, f'Total Students: {num_students}',
+         ha='center', fontsize=9, style='italic')
+
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+
+# Save the bar chart as PNG
+chart_path_failures = '/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/charts/highest_failures_chart.png'
+plt.savefig(chart_path_failures)
+chart_paths.append(chart_path_failures)
+plt.close()
 
 # Plotting bar charts for each subject and save as PNG
-chart_paths = []
+
 for subject in subjects:
     # Ensure all grade keys exist even if their counts are zero
     for grade in grade_points_order.keys():
@@ -64,7 +92,7 @@ for subject in subjects:
     color_values = np.linspace(0, 1, len(grades))
 
     plt.figure(figsize=(8, 6))
-    bars = plt.bar(grades, counts, color=plt.cm.viridis(color_values))
+    bars = plt.bar(grades, counts, color=plt.cm.plasma(color_values))
     plt.xlabel('Grades')
     plt.ylabel('Number of Students')
     plt.title(f'Grade Distribution for {subject}')
@@ -89,7 +117,7 @@ for subject in subjects:
     plt.tight_layout()
     
     # Save the bar chart as PNG
-    chart_path = os.path.join(charts_directory, f'{subject}_chart.png')
+    chart_path = os.path.join('/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/charts/', f'{subject}_chart.png')
     plt.savefig(chart_path)
     plt.close()
     chart_paths.append(chart_path)
@@ -105,10 +133,11 @@ def convert_png_to_pdf(png_files, output_pdf):
         pdf.add_page()
         pdf.image(image, x=0, y=0, w=page_width, h=page_height, type='PNG', link=image)  # Specify type and link to maintain image quality
         pdf.image("watermark.png", x=page_width - 50, y=page_height - 50, w=40, h=30, type='PNG')
-
+        os.remove(image)
     # Save the PDF file
     pdf.output(output_pdf)
 
 # Call the function to convert PNGs to PDF
 output_pdf_path = '/home/picchai/Documents/GItHub/resluts_automation_ByScrapping/Dept_Analysis.pdf'
 convert_png_to_pdf(chart_paths, output_pdf_path)
+PdfConverter.play_sound()

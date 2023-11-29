@@ -21,7 +21,7 @@ def convert_student_range_to_pdf(start_usn, end_usn, folder_path):
 
     # Use the existing conversion code with the filtered images
     convert_radar_charts_to_pdf(filtered_png_files)
-    print("Successfully Generated the PDF File")
+    print("Successfully Generated the PDF1 File")
     play_sound()
 
 def convert_radar_charts_to_pdf(radar_chart_list):
