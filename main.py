@@ -17,7 +17,7 @@
 # Department of Electronics and Communication Engineering
 # Email: Karthikreddyr7@gmail.com
 
-"""                                                                                           
+"""
 # this is the completely developing code
 import json 
 import os

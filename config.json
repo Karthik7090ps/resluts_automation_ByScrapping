@@ -1,8 +1,8 @@
 {
-    "developer_mode": 1,
+    "developer_mode": 0,
     "print_debug_data": 0,
-    "screen_show": 0,
-    "auto": 1,
+    "screen_show": 1,
+    "auto": 0,
     "firstnum": 409,
     "spdfrange": "001",
     "epdfrange": "300",
